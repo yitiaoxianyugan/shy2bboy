@@ -6,7 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "yitiaoxianyugan",
+  "author": {
+    "name": "yitiaoxianyugan",
+    "email": "2184075593@qq.com",
+    "url":"https://github.com/yitiaoxianyugan/shy2bboy"
+  },
   "license": "ISC",
   "dependencies": {
 	  "axios": "^0.21.1",
