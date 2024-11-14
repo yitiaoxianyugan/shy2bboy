@@ -1,0 +1,11 @@
+{
+  "name": "我的github项目",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "yitiaoxianyugan",
+  "license": "ISC"
+}
