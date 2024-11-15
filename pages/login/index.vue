@@ -1,5 +1,8 @@
 <template>
 	<view class="page-bg login-page f-row flex-center">
+		<view class="login-image">
+			<image class="logo" src="/static/poster.png" style="width:100%;height:100%"></image>
+		</view>
 		<view class="login-box f-col">
 			<view class="form-box f-col gap-4">
 				<uni-easyinput prefixIcon="person" v-model="user.account" placeholder="请输入账号">
@@ -39,8 +42,6 @@
 					uni.navigateTo({
 						url: "/pages/home/index"
 					})
-				} else {
-					showToast("登录失败!")
 				}
 				this.loading = false;
 			}
@@ -50,14 +51,28 @@
 
 <style lang="less">
 	.login-page {
+		background-image: url("../../static/login_background.gif");
+		background-size: 100% 100%;
 		position: relative;
+
+		.login-image {
+			position: absolute;
+			width: 61.8%;
+			aspect-ratio: 1/1;
+			border-radius: .875rem;
+			overflow: hidden;
+			top: 0;
+			left: 50%;
+			transform: translate(-50%,0px) scale(.618);
+		}
 
 		.login-box {
 			width: 61.8%;
 			padding: 1.25rem 1rem;
-			box-shadow: 0 2px 10px rgba(0, 0, 0, 10%);
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 25%);
 			border-radius: .375rem;
 			overflow: hidden;
+			backdrop-filter: blur(4px);
 
 			.form-box {
 				.login-btn {
@@ -74,6 +89,7 @@
 			left: 0;
 			bottom: 0;
 			text-align: center;
+			backdrop-filter: blur(2px);
 		}
 	}
 </style>
