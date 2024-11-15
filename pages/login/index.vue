@@ -4,6 +4,7 @@
 			<image class="logo" src="/static/poster.png" style="width:100%;height:100%"></image>
 		</view>
 		<view class="login-box f-col">
+			<view class="d-block w-100 text-c login-title">YY</view>
 			<view class="form-box f-col gap-4">
 				<uni-easyinput prefixIcon="person" v-model="user.account" placeholder="请输入账号">
 				</uni-easyinput>
@@ -28,8 +29,8 @@
 		data() {
 			return {
 				user: {
-					account: "",
-					password: ""
+					account: "1111111111",
+					password: "123456"
 				},
 				loading: false
 			}
@@ -39,7 +40,7 @@
 				this.loading = true;
 				let flag = await login(user);
 				if (flag) {
-					uni.navigateTo({
+					uni.switchTab({
 						url: "/pages/home/index"
 					})
 				}
@@ -65,7 +66,7 @@
 			left: 50%;
 			transform: translate(-50%,0px) scale(.618);
 		}
-
+		
 		.login-box {
 			width: 61.8%;
 			padding: 1.25rem 1rem;
@@ -73,7 +74,14 @@
 			border-radius: .375rem;
 			overflow: hidden;
 			backdrop-filter: blur(4px);
+			gap: 1rem;
 
+			.login-title {
+				font-size: 1.25rem;
+				font-weight: 500;
+				color: #fff;
+				letter-spacing: .25rem;
+			}
 			.form-box {
 				.login-btn {
 					font-size: .875rem;
