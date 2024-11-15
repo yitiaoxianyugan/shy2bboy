@@ -12,7 +12,17 @@
 	}
 </script>
 
-<style>
+<style lang="less">
 	/*每个页面公共css */
 	@import '@/static/css/public.css';
+	
+	page {
+		width:100vw;
+		height:100vh;
+		overflow: hidden;
+	}
+	.page-bg{
+		width:100%;
+		height: 100%;
+	}
 </style>
