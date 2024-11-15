@@ -5,7 +5,8 @@
 			"id": "12345678",
 			"user_id": "2184075593",
 			"user_name": "小咸鱼",
-			"user_sex": 1
+			"user_sex": 1,
+			"user_pwd":"123456"
 		}
 	]
 }
