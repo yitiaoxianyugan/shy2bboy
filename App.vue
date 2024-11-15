@@ -19,7 +19,12 @@
 	
 	page {
 		width:100vw;
+		// #ifdef APP
 		height:100vh;
+		// #endif
+		// #ifndef APP
+		height:calc(100vh - 44px);
+		// #endif
 		overflow: hidden;
 	}
 	.page-bg{
