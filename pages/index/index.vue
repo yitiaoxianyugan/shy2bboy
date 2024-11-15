@@ -7,7 +7,7 @@
 </template>
 
 <script>
-	import { formatDate } from "../../custom_function/index.js"
+	import { searchUser } from "../../custom_function/index.js"
 	export default {
 		data() {
 			return {
@@ -17,33 +17,25 @@
 		onLoad() {
 			this.onloadUserinfo()
 		},
-		mounted() {
-			console.log("success",formatDate("2024-12-23 18:12:32"));
-		},
 		methods: {
 			onloadUserinfo() {
 				let self = this;
 				self.loading = true;
-				let data = {
-					id: "12345678",
-					user_id: "2184075593",
-					user_name: "小咸鱼",
-					user_sex: 1
-				}
-				uni.setStorageSync('user_info', data);
 				uni.getStorage({
 					key: 'user_info',
-					success: function(res) {
-						console.log("success", res.data);
-					},
-					fail: function(res) {
-						console.log("fail", res);
-					},
 					complete: function(res) {
-						console.log("complete", res);
-						// uni.navigateTo({
-						// 	url:"/pages/login/index"
-						// })
+						console.log("complete", res.data.id);
+						if(res.data && res.data.id){
+							const data = searchUser(res.data.id);
+							uni.setStorageSync('user_info',data)
+							uni.navigateTo({
+								url:"/pages/home/index"
+							})
+						}else{
+							uni.navigateTo({
+								url:"/pages/login/index"
+							})
+						}
 						self.loading = false;
 					}
 				})
