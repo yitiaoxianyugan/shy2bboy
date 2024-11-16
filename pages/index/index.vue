@@ -52,7 +52,7 @@
 						if (res.data && res.data.id) {
 							const data = searchUser("id", res.data.id);
 							uni.setStorageSync('user_info', data)
-							uni.navigateTo({
+							uni.switchTab({
 								url: "/pages/home/index"
 							})
 						} else {
