@@ -63,4 +63,18 @@ export function loadState(state,loadTextBase,dotNum){
 	}
 	return loadText;
 }
-
+// 计算 数字 浮点数 保留一位小数去0
+export function countPriceDiscount(price, discount){
+	discount = parseFloat(discount) || 0.7;
+	price = parseInt(price);
+	let result;
+	if(price == 0 || price == '0'){
+		result = 0;
+	}else{
+		let newPrice = price * discount;
+		let formattedPrice = newPrice.toFixed(1);
+		let shouldRound = formattedPrice.endsWith('.0') || newPrice === Math.floor(newPrice);
+		result = shouldRound ? Math.floor(newPrice) : formattedPrice;
+	}
+	return result
+}
