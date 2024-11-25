@@ -2,6 +2,7 @@ import moment from "moment";
 
 import UserData from "../dataJson/user.json"
 const userList = UserData.table_list;
+let dots = ".";
 // 格式化时间
 export function formatDate(date, format) {
 	format = format || "YYYY/MM/DD";
@@ -45,7 +46,6 @@ export function showToast(title, type, duration) {
 }
 
 // 加载状态
-let dots = ".";
 export function loadState(state,loadTextBase,dotNum){
 	let loadText = "";
 	loadTextBase = loadTextBase || "加载中";
