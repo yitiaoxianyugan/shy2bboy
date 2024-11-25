@@ -12,6 +12,9 @@
 				</uni-easyinput>
 				<button class="login-btn w-100" size="default" type="primary" :loading="loading"
 					@click="toLogin(user)">登录</button>
+				<view class="d-flex flex-center">
+					<uni-icons type="weixin" size="30" color="#21b729" @click="toThirdLogin('wx')"></uni-icons>
+				</view>
 			</view>
 		</view>
 		<view class="banquan-box d-block color-9">
@@ -45,6 +48,23 @@
 					})
 				}
 				this.loading = false;
+			},
+			toThirdLogin(e){
+				if(e == 'wx'){
+					uni.login({
+						"provider": "weixin",
+						"onlyAuthorize": true,
+						success: function(event){
+							const {code} = event
+							console.log("toThirdLogin-success",event);
+						},
+						fail: function (err) {
+							console.log("toThirdLogin-fail",err);
+						}
+					});
+				}else{
+					console.info("暂未支持!")
+				}
 			}
 		}
 	}
