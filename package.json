@@ -1,5 +1,5 @@
 {
-  "name": "我的github项目",
+  "name": "my_project",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -9,12 +9,14 @@
   "author": {
     "name": "yitiaoxianyugan",
     "email": "2184075593@qq.com",
-    "url":"https://github.com/yitiaoxianyugan/shy2bboy"
+    "url": "https://github.com/yitiaoxianyugan/shy2bboy"
   },
   "license": "ISC",
   "dependencies": {
-	  "axios": "^0.21.1",
-	  "lodash": "^4.17.20",
-	  "moment": "^2.29.1"
+    "@playwright/test": "^1.49.0",
+    "axios": "^0.21.1",
+    "clipboardy": "^4.0.0",
+    "lodash": "^4.17.20",
+    "moment": "^2.29.1"
   }
 }
