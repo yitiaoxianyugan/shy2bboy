@@ -1,5 +1,5 @@
 // 平台:CSDN
-// 问题:私信界面是iframe嵌套,需要先获取iframe
+// 问题:私信界面是iframe嵌套,需要先获取iframe,一天之内只能给5个陌生人发送私信
 import { chromium } from "@playwright/test";
 import path from "path";
 import url from "url";
@@ -46,7 +46,8 @@ async function run() {
     let flag = true;
     let filteredUrlsArray = [];
     let filteredUrlsArrayOldLen = 0;
-    while (flag !== false) {
+    // 这次数据长度与上次数据长度一样,说明到底了
+    while (filteredUrlsArray.length == 0 || filteredUrlsArray.length - filteredUrlsArrayOldLen == 0) {
         filteredUrlsArrayOldLen = filteredUrlsArray.length;
         // 页面滚动(120)一下
         await page.evaluate(() => {
@@ -61,12 +62,8 @@ async function run() {
         const filteredUrls = await processAndClosePages(page);
         await processPage(filteredUrls);
         filteredUrlsArray = [...filteredUrlsArray, ...filteredUrls];
-        // 这次数据长度与上次数据长度一样,说明到底了
-        if (filteredUrlsArray.length - filteredUrlsArrayOldLen == 0) {
-            console.log("没有更多数据了");
-            flag = false
-        }
     }
+    console.log("没有更多数据了");
     // 关闭页面
     await page.close();
     // 关闭浏览器
@@ -111,37 +108,60 @@ async function processPage(uniqueData) {
     for (let index = 0; index < uniqueData.length; index++) {
         const element = uniqueData[index];
         // 最好使用一个唯一值,避免同名情况
-        if (codepenData.some((obj) => obj.user_id === element.user_id)) {
+        if (codepenData.some((obj) => obj.user_id === element.user_id && obj.flag)) {
             continue;
         }
+        const gzPage = await openNewPage(element.href);
+        await gzPage.waitForTimeout(2000);
+        if (!gzPage) {
+            await new Promise((resolve) => setTimeout(resolve, 60000));
+        }
+
+        const guanzhuTrue = await gzPage.$('div.user-profile-operate-btn a.user-profile-red-btn');
+        if (guanzhuTrue == null || guanzhuTrue == 'null' || !guanzhuTrue) {
+            const guanzhuFalse = await gzPage.$('div.user-profile-operate-btn a.user-profile-black-btn');
+            if(guanzhuFalse == null || guanzhuFalse == 'null' || !guanzhuFalse) {
+                const tempDom = await gzPage.$('div.opt-letter-watch-box a.personal-watch.bt-button');
+                await tempDom.click();
+            }else{
+                await guanzhuFalse.click();
+            }
+        }
+        await gzPage.waitForTimeout(1000);
         // 这里图方便,直接打开私信页面
         let tempUrl = `https://i.csdn.net/#/msg/chat/${element.user_id}`
-        const page = await openNewPage(tempUrl);
-        await page.waitForTimeout(2000);
-        if (!page) {
+        const sxPage = await openNewPage(tempUrl);
+        await sxPage.waitForTimeout(2000);
+        if (!sxPage) {
             await new Promise((resolve) => setTimeout(resolve, 60000));
         }
         // 由于私信操作被嵌套在iframe,只能先获取iframe内容
-        const iframe = await page.$('div.im-wrapper iframe');
+        const iframe = await sxPage.$('div.im-wrapper iframe');
         const frame = await iframe.contentFrame();
 
         await frame.waitForTimeout(2000);
         const editBox = await frame.$('div.Editor textarea'); // 私信框css
-        await setCode(page, huashu);
+        await setCode(sxPage, huashu);
         await editBox.click();
-        await pasteCode(page);
-        await page.waitForTimeout(1000);
-
+        await pasteCode(sxPage);
         /**
          * 可以通过快捷键直接发送消息
          * 没问题需解除注释
          */
+        await sxPage.waitForTimeout(1000);
         // await page.keyboard.down("Control");
-        // await page.keyboard.press("Enter");
+        await page.keyboard.press("Enter");
 
-        await page.waitForTimeout(1000);
-        await page.close();
-        count += 1;
+        // 等待发送完成
+        await sxPage.waitForTimeout(3000);
+
+        // 出现提示
+        const infotip = await frame.$('div.system-prompt div.pure-text')
+        element["flag"] = infotip ? false : true;
+
+        await sxPage.close();
+        await gzPage.close();
+        count = count == 0 ? (codepenData.length + 1) : (count + 1)
         element["id"] = count;
         console.log("发送成功", element.id, element.name);
         codepenData.push(element);

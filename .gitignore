@@ -34,3 +34,5 @@ pnpm-debug.log*
 /.vscode/
 /.history/
 /svn clear.bat
+
+yarn.lock
