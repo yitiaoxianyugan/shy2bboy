@@ -12,6 +12,8 @@ import clipboardy from "clipboardy";
 /**
  * 无需更改
  */
+// 获取系统信息、判断系统类型
+const systemInfo = await getSystemInfo();
 // 获取当前文件目录名和文件名
 const _filename = url.fileURLToPath(import.meta.url);
 const _dirname = path.dirname(_filename);
@@ -20,9 +22,8 @@ const browser = await chromium.launch({
     product: 'microsoftedge',
     headless: false,
 });
-const context = createContext();
-// 获取系统信息、判断系统类型
-const systemInfo = await getSystemInfo();
+const context = await createContext();
+
 
 /**
  * 需要更改
@@ -215,6 +216,7 @@ async function getSystemInfo() {
  * 打开新页面
  */
 async function openNewPage(pageUrl) {
+    console.log("context",context);
     const page = await context.newPage();
     page.setDefaultTimeout(24 * 60 * 60 * 1000);
     await page.setViewportSize({ width: 1440, height: 1200 });
