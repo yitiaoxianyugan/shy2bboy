@@ -29,15 +29,43 @@ const context = await createContext();
  * 需要更改
  */
 // 前端域名
-const webDomain = "https://fanhao8.site/zh-cn/";
+const webDomain = "https://clm5.clmapp1.xyz/oneindex.php";
+// 话术
+const huashu = "FSDSS";
 // 计数
 let count = 0;
 // 运行
 run();
 
-async function run(){
+async function run() {
     const page = await openNewPage(webDomain);
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(2000);
+    const input = await page.$('div.SearchForm_input_wrapper input#SearchForm_keyword');
+    const search = await page.$('div#SearchForm_submit_btn_wrapper i.iconfont.icon-guanbi1');
+    await setCode(page, huashu);
+    await input.click();
+    await pasteCode(page);
+    await search.click();
+    await page.waitForTimeout(2000);
+    const fh = await page.$('div.Search_nav a:last-child');
+    await fh.click();
+    await page.waitForTimeout(2000);
+    const searchTip = await page.evaluate(() => {
+        const companyNames = document.querySelectorAll("div.Search_tip b");
+        const tip = Array.from(companyNames).map((obj) => {
+            return obj.textContent.trim()
+        });
+        return tip;
+    });
+
+    console.log("test:", searchTip);
+    let codepenDataStr = fs.readFileSync(`node_auto_mjs/Temp/csdn-codepenData.json`, "utf8");
+    let codepenData = JSON.parse(codepenDataStr);
+    // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M%3DNjdwwW24
+    // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M=NjdwwW24&sort=one
+    // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M=NjdwwW24&sort=one&page=2
+    // const searchResult = await openNewPage(element.href);
+    // let nextButtons = await page.$$('button.vui_button.vui_pagenation--btn.vui_pagenation--btn-side');
 }
 
 /**
@@ -216,10 +244,9 @@ async function getSystemInfo() {
  * 打开新页面
  */
 async function openNewPage(pageUrl) {
-    console.log("context",context);
     const page = await context.newPage();
     page.setDefaultTimeout(24 * 60 * 60 * 1000);
-    await page.setViewportSize({ width: 1440, height: 1200 });
+    await page.setViewportSize({ width: 640, height: 600 });
     const timeout = 60 * 1000;
     try {
         await page.goto(pageUrl, { timeout });
