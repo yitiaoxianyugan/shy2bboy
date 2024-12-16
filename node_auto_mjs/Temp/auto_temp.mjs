@@ -57,17 +57,54 @@ async function run() {
         });
         return tip;
     });
+    let pageNoge = 1;
+    let pageTotal = searchTip[2];
+    if (pageNoge <= pageTotal) {
+        const currentData = await page.evaluate(() => {
+            const companyNames = document.querySelectorAll("li div.Search_title_wrapper a");
+            const lis = Array.from(companyNames).map((obj) => {
+                return {
+                    v_id:obj.id.trim(),
+                    href:obj.href.trim(),
+                    name:obj.textContent.trim()
+                }
+            });
+            return lis;
+        });
+        processPage(currentData);
+        pageNoge += 1;
+    }
+    console.log("没有更多数据了");
+    // 关闭页面
+    // await page.close();
+    // 关闭浏览器
+    // await context.close();
+    // await browser.close();
 
-    console.log("test:", searchTip);
-    let codepenDataStr = fs.readFileSync(`node_auto_mjs/Temp/csdn-codepenData.json`, "utf8");
-    let codepenData = JSON.parse(codepenDataStr);
     // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M%3DNjdwwW24
     // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M=NjdwwW24&sort=one
     // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M=NjdwwW24&sort=one&page=2
     // const searchResult = await openNewPage(element.href);
     // let nextButtons = await page.$$('button.vui_button.vui_pagenation--btn.vui_pagenation--btn-side');
 }
-
+async function processPage(uniqueData) {
+    let codepenDataStr = fs.readFileSync(`node_auto_mjs/Temp/codepenData.json`, "utf8");
+    let codepenData = JSON.parse(codepenDataStr);
+    // uniqueData.length
+    for (let index = 0; index < 1; index++) {
+        const element = uniqueData[index];
+        const itemPage = await openNewPage(element.href);
+        await itemPage.waitForTimeout(2000);
+        if (!itemPage) {
+            await new Promise((resolve) => setTimeout(resolve, 60000));
+        }
+        await itemPage.evaluate(() => {
+            element["car_number"] = document.querySelector("div.info p span#sbm111").textContent.trim()
+        });
+        
+        console.log("element",index,element);
+    }
+}
 /**
  * 初始化浏览器实例
  * @returns
