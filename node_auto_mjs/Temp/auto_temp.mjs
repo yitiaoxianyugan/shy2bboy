@@ -31,7 +31,7 @@ const context = await createContext();
 // 前端域名
 const webDomain = "https://clm5.clmapp1.xyz/oneindex.php";
 // 话术
-const huashu = "FSDSS";
+const huashu = "ROE";//FSDSS
 // 计数
 let count = 0;
 // 运行
@@ -40,6 +40,9 @@ run();
 async function run() {
     const page = await openNewPage(webDomain);
     await page.waitForTimeout(2000);
+    if (!page) {
+        await new Promise((resolve) => setTimeout(resolve, 60000));
+    }
     const input = await page.$('div.SearchForm_input_wrapper input#SearchForm_keyword');
     const search = await page.$('div#SearchForm_submit_btn_wrapper i.iconfont.icon-guanbi1');
     await setCode(page, huashu);
@@ -47,8 +50,10 @@ async function run() {
     await pasteCode(page);
     await search.click();
     await page.waitForTimeout(2000);
+    // 点击番号搜索
     const fh = await page.$('div.Search_nav a:last-child');
     await fh.click();
+
     await page.waitForTimeout(2000);
     const searchTip = await page.evaluate(() => {
         const companyNames = document.querySelectorAll("div.Search_tip b");
@@ -59,50 +64,84 @@ async function run() {
     });
     let pageNoge = 1;
     let pageTotal = searchTip[2];
-    if (pageNoge <= pageTotal) {
-        const currentData = await page.evaluate(() => {
-            const companyNames = document.querySelectorAll("li div.Search_title_wrapper a");
-            const lis = Array.from(companyNames).map((obj) => {
-                return {
-                    v_id:obj.id.trim(),
-                    href:obj.href.trim(),
-                    name:obj.textContent.trim()
-                }
+    let newPage = page;
+    await searchPage(newPage,pageNoge)
+    async function searchPage(page,pageNoge){
+        let href = page.url();
+        const url = new URL(href)
+        const url_params = new URLSearchParams(url.search);
+        if (pageNoge <= pageTotal) {
+            const currentData = await page.evaluate(() => {
+                const companyNames = document.querySelectorAll("li div.Search_title_wrapper a");
+                const lis = Array.from(companyNames).map((obj) => {
+                    return {
+                        v_id:obj.id.trim(),
+                        href:obj.href.trim(),
+                        car_name:obj.textContent.trim()
+                    }
+                });
+                return lis;
             });
-            return lis;
-        });
-        processPage(currentData);
-        pageNoge += 1;
+            await processPage(currentData);
+            pageNoge += 1;
+            url_params.set('page', pageNoge);
+            url.search = url_params.toString();
+            newPage = await openNewPage(`${url.toString()}`);
+            searchPage(newPage,pageNoge)
+        }else{
+            return false;
+        } 
     }
+    await page.waitForTimeout(1000);
     console.log("没有更多数据了");
     // 关闭页面
     // await page.close();
     // 关闭浏览器
     // await context.close();
     // await browser.close();
-
-    // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M%3DNjdwwW24
-    // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M=NjdwwW24&sort=one
-    // https://clm5.clmapp1.xyz/cllj.php?name=VjdwwW29RlNEU1M=NjdwwW24&sort=one&page=2
-    // const searchResult = await openNewPage(element.href);
-    // let nextButtons = await page.$$('button.vui_button.vui_pagenation--btn.vui_pagenation--btn-side');
 }
 async function processPage(uniqueData) {
     let codepenDataStr = fs.readFileSync(`node_auto_mjs/Temp/codepenData.json`, "utf8");
     let codepenData = JSON.parse(codepenDataStr);
-    // uniqueData.length
-    for (let index = 0; index < 1; index++) {
-        const element = uniqueData[index];
+    for (let index = 0; index < uniqueData.length; index++) {
+        let element = uniqueData[index];
+        if (codepenData.some((obj) => obj.v_id === element.v_id)) {
+            continue;
+        }
         const itemPage = await openNewPage(element.href);
         await itemPage.waitForTimeout(2000);
         if (!itemPage) {
             await new Promise((resolve) => setTimeout(resolve, 60000));
         }
-        await itemPage.evaluate(() => {
-            element["car_number"] = document.querySelector("div.info p span#sbm111").textContent.trim()
+        const videoInfo = await itemPage.evaluate(() => {
+            const pText = document.querySelectorAll("div.info>p:nth-child(-n+6)");
+            const p_spanText = document.querySelectorAll("div.info>p:nth-child(-n+6) span:first-child");
+            const car_performer_list = document.querySelectorAll("div.info p.star-show~a");
+            const car_performers = Array.from(car_performer_list).map(e=>{
+                return e.textContent.trim();
+            })
+            return {
+                car_number:formatText(0),
+                car_time:formatText(1),
+                car_duration:formatText(2),
+                car_firm:formatText(3),
+                car_director:formatText(5),
+                car_performers
+            }
+            function formatText(index){
+                let text = pText[index].textContent.trim()
+                let del_text = p_spanText[index].textContent.trim()
+                return text.replace(del_text, "");
+            }
         });
-        
-        console.log("element",index,element);
+        element = {
+            ...element,
+            ...videoInfo
+        }
+        await itemPage.waitForTimeout(2000);
+        codepenData.push(element);
+        fs.writeFileSync("node_auto_mjs/Temp/codepenData.json", JSON.stringify(codepenData));
+        await itemPage.close();
     }
 }
 /**
@@ -283,7 +322,7 @@ async function getSystemInfo() {
 async function openNewPage(pageUrl) {
     const page = await context.newPage();
     page.setDefaultTimeout(24 * 60 * 60 * 1000);
-    await page.setViewportSize({ width: 640, height: 600 });
+    await page.setViewportSize({ width: 1280, height: 600 });
     const timeout = 60 * 1000;
     try {
         await page.goto(pageUrl, { timeout });
