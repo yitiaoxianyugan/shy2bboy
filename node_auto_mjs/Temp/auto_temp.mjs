@@ -31,12 +31,88 @@ const context = await createContext();
 // 前端域名
 const webDomain = "https://clm5.clmapp1.xyz/oneindex.php";
 // 话术
-const huashu = "ROE";//FSDSS
+let huashu = "透明";
+let huashuList = [];
 // 计数
 let count = 0;
 // 运行
 run();
-
+async function init() {
+    let codepenDataStr = fs.readFileSync(`node_auto_mjs/Temp/huashu.json`, "utf8");
+    huashuList = JSON.parse(codepenDataStr);
+    let haushuLen = huashuList.length
+    if (haushuLen <= 0) {
+        await newrun(huashu);
+    } else {
+        for (let index = 0; index < haushuLen; index++) {
+            let huashuItem = huashuList[index]
+            await newrun(huashuItem);
+        }
+    }
+    async function newrun(str) {
+        const page = await openNewPage(webDomain);
+        await page.waitForTimeout(2000);
+        if (!page) {
+            await new Promise((resolve) => setTimeout(resolve, 60000));
+        }
+        const input = await page.$('div.SearchForm_input_wrapper input#SearchForm_keyword');
+        const search = await page.$('div#SearchForm_submit_btn_wrapper i.iconfont.icon-guanbi1');
+        await setCode(page, str);
+        await input.click();
+        await pasteCode(page);
+        await search.click();
+        await page.waitForTimeout(2000);
+        const searchTip = await page.evaluate(() => {
+            const companyNames = document.querySelectorAll("div.Search_tip b");
+            const tip = Array.from(companyNames).map((obj) => {
+                return obj.textContent.trim()
+            });
+            return tip;
+        });
+        let pageNoge = 1;
+        let pageTotal = searchTip[2];
+        let newPage = page;
+        await searchPage(newPage, pageNoge);
+        async function searchPage(newPage, pageNoge) {
+            await newPage.waitForTimeout(2000)
+            let href = page.url();
+            const url = new URL(href)
+            const url_params = new URLSearchParams(url.search);
+            if (pageNoge <= pageTotal) {
+                console.log("加载---" + str + "---第" + pageNoge + "/" + pageTotal + "页");
+                const currentData = await newPage.evaluate(() => {
+                    const companyNames = document.querySelectorAll("li div.Search_title_wrapper a");
+                    const lis = Array.from(companyNames).map((obj) => {
+                        return {
+                            v_id: obj.id.trim(),
+                            href: obj.href.trim(),
+                            car_name: obj.textContent.trim()
+                        }
+                    });
+                    return lis;
+                });
+                await processPage(currentData);
+                await newPage.waitForTimeout(1000)
+                await newPage.close();
+                pageNoge += 1;
+                url_params.set('page', pageNoge);
+                url.search = url_params.toString();
+                newPage = await openNewPage(`${url.toString()}`);
+                await newPage.waitForTimeout(2000);
+                await searchPage(newPage, pageNoge);
+            } else {
+                return false;
+            }
+        }
+        await page.waitForTimeout(1000);
+        console.log("没有更多数据了");
+        // 关闭页面
+        await page.close();
+        // 关闭浏览器
+        await context.close();
+        await browser.close();
+    }
+}
 async function run() {
     const page = await openNewPage(webDomain);
     await page.waitForTimeout(2000);
@@ -65,44 +141,54 @@ async function run() {
     let pageNoge = 1;
     let pageTotal = searchTip[2];
     let newPage = page;
-    await searchPage(newPage,pageNoge)
-    async function searchPage(page,pageNoge){
+    await searchPage(newPage, pageNoge)
+    async function searchPage(newPage, pageNoge) {
+        await newPage.waitForTimeout(2000)
         let href = page.url();
         const url = new URL(href)
         const url_params = new URLSearchParams(url.search);
         if (pageNoge <= pageTotal) {
-            const currentData = await page.evaluate(() => {
+            console.log("加载---" + huashu + "---第" + pageNoge + "/" + pageTotal + "页");
+            const currentData = await newPage.evaluate(() => {
                 const companyNames = document.querySelectorAll("li div.Search_title_wrapper a");
                 const lis = Array.from(companyNames).map((obj) => {
                     return {
-                        v_id:obj.id.trim(),
-                        href:obj.href.trim(),
-                        car_name:obj.textContent.trim()
+                        v_id: obj.id.trim(),
+                        href: obj.href.trim(),
+                        car_name: obj.textContent.trim()
                     }
                 });
                 return lis;
             });
             await processPage(currentData);
+            await newPage.waitForTimeout(1000)
+            await newPage.close();
             pageNoge += 1;
             url_params.set('page', pageNoge);
             url.search = url_params.toString();
             newPage = await openNewPage(`${url.toString()}`);
-            searchPage(newPage,pageNoge)
-        }else{
+            if (!newPage) {
+                await new Promise((resolve) => setTimeout(resolve, 10000));
+            }
+            await searchPage(newPage, pageNoge);
+        } else {
             return false;
-        } 
+        }
     }
-    await page.waitForTimeout(1000);
+    // await page.waitForTimeout(1000);
     console.log("没有更多数据了");
     // 关闭页面
-    // await page.close();
+    await page.close();
     // 关闭浏览器
-    // await context.close();
-    // await browser.close();
+    await context.close();
+    await browser.close();
 }
 async function processPage(uniqueData) {
     let codepenDataStr = fs.readFileSync(`node_auto_mjs/Temp/codepenData.json`, "utf8");
     let codepenData = JSON.parse(codepenDataStr);
+    let huashuDataStr = fs.readFileSync(`node_auto_mjs/Temp/huashu.json`, "utf8");
+    let huashuData = JSON.parse(huashuDataStr);
+    count = codepenData.length + 1;
     for (let index = 0; index < uniqueData.length; index++) {
         let element = uniqueData[index];
         if (codepenData.some((obj) => obj.v_id === element.v_id)) {
@@ -114,27 +200,49 @@ async function processPage(uniqueData) {
             await new Promise((resolve) => setTimeout(resolve, 60000));
         }
         const videoInfo = await itemPage.evaluate(() => {
+            let car_image = null;
             const pText = document.querySelectorAll("div.info>p:nth-child(-n+6)");
+            if (document.querySelector("div.screencap a.bigImage")) {
+                car_image = document.querySelector("div.screencap a.bigImage").href.trim();
+            }
             const p_spanText = document.querySelectorAll("div.info>p:nth-child(-n+6) span:first-child");
             const car_performer_list = document.querySelectorAll("div.info p.star-show~a");
-            const car_performers = Array.from(car_performer_list).map(e=>{
+            const car_link_list = document.querySelectorAll("table#magnet-table tbody tr:first-child td:first-child");
+            const car_performers = Array.from(car_performer_list).map(e => {
                 return e.textContent.trim();
-            })
+            });
+            // const car_type_list = document.querySelectorAll("div.info p.star-show~a");
+            const car_link = Array.from(car_link_list).map(e => {
+                // 提取onclick属性
+                const onclickAttr = e.getAttribute('onclick');
+                if (onclickAttr) {
+                    // 查找window.open调用中的链接
+                    const match = onclickAttr.match(/window\.open\('([^']+)'/);
+                    if (match) {
+                        // 返回匹配到的链接
+                        return match[1];
+                    }
+                }
+                return null;
+            });
             return {
-                car_number:formatText(0),
-                car_time:formatText(1),
-                car_duration:formatText(2),
-                car_firm:formatText(3),
-                car_director:formatText(5),
-                car_performers
+                car_image,
+                car_number: formatText(0),
+                car_time: formatText(1),
+                car_duration: formatText(2),
+                car_firm: formatText(3),
+                car_director: formatText(5),
+                car_performers,
+                car_link
             }
-            function formatText(index){
-                let text = pText[index].textContent.trim()
-                let del_text = p_spanText[index].textContent.trim()
+            function formatText(index) {
+                let text = pText[index].textContent.trim() || "";
+                let del_text = p_spanText[index].textContent.trim() || "";
                 return text.replace(del_text, "");
             }
         });
         element = {
+            id: count,
             ...element,
             ...videoInfo
         }
@@ -143,6 +251,7 @@ async function processPage(uniqueData) {
         fs.writeFileSync("node_auto_mjs/Temp/codepenData.json", JSON.stringify(codepenData));
         await itemPage.close();
     }
+
 }
 /**
  * 初始化浏览器实例
@@ -328,7 +437,8 @@ async function openNewPage(pageUrl) {
         await page.goto(pageUrl, { timeout });
     } catch (error) {
         console.log("页面加载超时，正在重新加载页面...");
-        await page.reload();
+        await page.
+            reload();
     }
     // await page.waitForLoadState("networkidle");
     await page.waitForTimeout(3000);
