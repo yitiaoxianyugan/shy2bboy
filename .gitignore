@@ -7,7 +7,7 @@ dist
 
 tests/server/static
 tests/server/static/upload
-node_modules
+node_modules/*
 node_auto_mjs/browser/*
 .local
 # local env files
