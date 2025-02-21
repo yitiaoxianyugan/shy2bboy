@@ -16,21 +16,28 @@ export default {
 /*每个页面公共css */
 @import "@/uni_modules/uni-scss/index.scss";
 
-page {
+.page {
   width: 100vw;
   // #ifdef APP
-  height: 100vh;
+  height:100vh;
   // #endif
   // #ifndef APP
-  height: calc(100vh - 44px);
+  height: calc(100vh - 50px);
   // #endif
   overflow: hidden;
+  padding-top:var(--status-bar-height);
 }
 .page-bg {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
 }
-
+view,
+div {
+  box-sizing: border-box;
+}
 // 自定义公共样式
 .w-100 {
   width: 100%;
@@ -82,6 +89,18 @@ page {
   display: flex;
   flex-direction: column;
 }
+.flex-0-0 {
+  flex: 0 0 auto;
+}
+.flex-1-1 {
+  flex: 1 1 auto;
+}
+.flex-nowrap {
+  flex-wrap: nowrap;
+}
+.flex-wrap {
+  flex-wrap: wrap;
+}
 .flex-center {
   justify-content: center;
   align-items: center;
@@ -97,5 +116,8 @@ page {
 }
 .items-start {
   align-items: flex-start;
+}
+.border-50 {
+  border-radius: 50%;
 }
 </style>

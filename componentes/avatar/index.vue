@@ -1,6 +1,6 @@
 <template>
-  <view class="avatar_container flex-row">
-    <view class="avatar_innerBox flex-row" :style="{ width: cSize }">
+  <view class="avatar_container flex-row flex-center flex-0-0">
+    <view class="avatar_innerBox flex-row flex-0-0" :style="{ width: cSize }">
       <view
         :class="{
           'avatar_content flex-row flex-center': true,
@@ -86,8 +86,6 @@ export default {
 
 <style lang="less" scoped>
 .avatar_container {
-  width: auto;
-  height: auto;
   .avatar_innerBox {
     width: auto;
     aspect-ratio: 1;

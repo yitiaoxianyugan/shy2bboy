@@ -32,7 +32,7 @@
 					if (newValue) {
 						timer = setInterval(e => {
 							this.loadText = loadState(true)
-						}, 500)
+						}, 3000);
 					} else {
 						this.loadText = loadState(false)
 						clearInterval(timer)

@@ -1,18 +1,18 @@
 <template>
-	<view class="page-bg login-page f-row flex-center">
+	<view class="page-bg login-page flex-row flex-center">
 		<view class="login-image">
 			<image class="logo" src="/static/poster.png" style="width:100%;height:100%"></image>
 		</view>
-		<view class="login-box f-col">
-			<view class="d-block w-100 text-c login-title">YY</view>
-			<view class="form-box f-col gap-4">
+		<view class="login-box flex-col">
+			<view class="d-block w-100 text-center login-title">YY</view>
+			<view class="form-box flex-col gap-4">
 				<uni-easyinput prefixIcon="person" v-model="user.account" placeholder="请输入账号">
 				</uni-easyinput>
 				<uni-easyinput prefixIcon="eye" v-model="user.password" placeholder="请输入密码">
 				</uni-easyinput>
 				<button class="login-btn w-100" size="default" type="primary" :loading="loading"
 					@click="toLogin(user)">登录</button>
-				<view class="d-flex flex-center">
+				<view class="flex-row flex-center">
 					<uni-icons type="weixin" size="30" color="#21b729" @click="toThirdLogin('wx')"></uni-icons>
 				</view>
 			</view>

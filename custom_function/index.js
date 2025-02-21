@@ -9,6 +9,21 @@ export function formatDate(date, format) {
 	let newDate = moment(date).format(format)
 	return newDate;
 }
+export function formatTimeText() {
+	let options = {
+		weekday: "long",
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	};
+	const today = new Date();
+	const formattedDateEn = today.toLocaleDateString("en-US", options);
+	const formattedDateZh = today.toLocaleDateString("zh-CN", options);
+	return {
+		formattedDateEn,
+		formattedDateZh
+	}
+}
 // 查找用户
 export function searchUser(key, value) {
 	const user = userList.find(item => item[key] === value);
@@ -27,7 +42,7 @@ export function login(userInfo) {
 	} else {
 		if (tempItem.user_pwd === user.user_pwd) {
 			showToast("登录成功!");
-			uni.setStorageSync("user_info",user);
+			uni.setStorageSync("user_info", user);
 			return true;
 		} else {
 			showToast("密码错误!");
@@ -46,31 +61,31 @@ export function showToast(title, type, duration) {
 }
 
 // 加载状态
-export function loadState(state,loadTextBase,dotNum){
+export function loadState(state, loadTextBase, dotNum) {
 	let loadText = "";
 	loadTextBase = loadTextBase || "加载中";
 	dotNum = dotNum || 6;
-	if(state){
+	if (state) {
 		loadText = loadTextBase + dots
-		if(dots.length >= dotNum){
+		if (dots.length >= dotNum) {
 			dots = ".";
-		}else{
+		} else {
 			dots += "."
 		}
-	}else{
+	} else {
 		dots = ".";
 		loadText = ""
 	}
 	return loadText;
 }
 // 计算 数字 浮点数 保留一位小数去0
-export function countPriceDiscount(price, discount){
+export function countPriceDiscount(price, discount) {
 	discount = parseFloat(discount) || 0.7;
 	price = parseInt(price);
 	let result;
-	if(price == 0 || price == '0'){
+	if (price == 0 || price == '0') {
 		result = 0;
-	}else{
+	} else {
 		let newPrice = price * discount;
 		let formattedPrice = newPrice.toFixed(1);
 		let shouldRound = formattedPrice.endsWith('.0') || newPrice === Math.floor(newPrice);
