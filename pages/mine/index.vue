@@ -1,22 +1,18 @@
 <template>
-	<view>
-		我的
-	</view>
+  <view>
+   
+  </view>
 </template>
 
 <script>
-	export default {
-		data() {
-			return {
-				
-			}
-		},
-		methods: {
-			
-		}
-	}
+export default {
+  data() {
+    return {};
+  },
+  mounted() {},
+  methods: {},
+};
 </script>
 
 <style>
-
 </style>

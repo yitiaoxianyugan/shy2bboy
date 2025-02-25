@@ -39,6 +39,13 @@
 			{
 				"navigationBarTitleText" : ""
 			}
+		},
+		{
+			"path" : "pages/article/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "文章详情"
+			}
 		}
 	],
 	"globalStyle": {
