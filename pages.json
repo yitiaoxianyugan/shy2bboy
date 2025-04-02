@@ -46,6 +46,13 @@
 			{
 				"navigationBarTitleText" : "文章详情"
 			}
+		},
+		{
+			"path" : "componentes/custom_calendar/lunarCard",
+			"style" : 
+			{
+				"navigationBarTitleText" : ""
+			}
 		}
 	],
 	"globalStyle": {
