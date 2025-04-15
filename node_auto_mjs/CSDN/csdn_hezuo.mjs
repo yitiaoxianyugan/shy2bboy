@@ -13,18 +13,15 @@ const systemInfo = await getSystemInfo();
 // 前端域名
 const webDomain = "https://blog.csdn.net/rank/list/role";
 // 聊天内容
-const chatContent = [];
+let chatContent = [];
 
-let answer = "";
-let pullContent = "";
-let tempArrAll = [];
-let tempArrAllOld = [];
+let tempArrAll = {};
+let codepenDataStr = fs.readFileSync(`node_auto_mjs/CSDN/codepenData.json`, "utf8");
+let codepenData = JSON.parse(codepenDataStr);
 // 执行
 runChat();
 // 开始会话
 async function runChat() {
-    let codepenDataStr = fs.readFileSync(`node_auto_mjs/CSDN/codepenData.json`, "utf8");
-    let codepenData = JSON.parse(codepenDataStr);
     const page = await openNewPage(webDomain);
     await page.waitForTimeout(2000);
     let csdnBoZhuList = await page.evaluate(() => {
@@ -47,71 +44,97 @@ async function runChat() {
         console.error("联系人列表为空");
         return;
     }
-    try {
-        for (var index = 0; index < csdnBoZhuList.length; index++) {
-            let test = {
-                id: "cainiao_xiaoba",
-                name: "cainiao_xiaobai#1",
-                indexUrl: "https://blog.csdn.net/cainiao_xiaoba",
-                gz_state: false,
-                hz_state: false,
-                df_state: false
-            }
-            let element = false ? csdnBoZhuList[index] : test;
-            if (codepenData.some((obj) => obj.id === element.id && element.df_state)) {
-                continue;
-            }
-            let chatUrl = `https://i.csdn.net/#/msg/chat/${element.id}`;
-            let formData = {
-                blogger_platform: "CSDN",
-                blogger_name: element.name
-            };
-            const chatPage = await openNewPage(chatUrl);
-            const iframe = await chatPage.$('div.im-wrapper iframe');
-            const frame = await iframe.contentFrame();
-            await SendContent(frame, formData, "你好");
-            await chatPage.waitForTimeout(1000);
+    for (let index = 0; index < csdnBoZhuList.length; index++) {
+        const element = csdnBoZhuList[index];
+        await page.waitForTimeout(30000);
+        processElement(element)
+    }
+    // 将处理单个元素的逻辑封装成异步函数  
+    async function processElement(element) {
+        if (codepenData.some((obj) => obj.id === element.id && element.df_state)) {
+            return; // 跳过不需要处理的元素  
         }
-        await closeChat(page);
-    } catch (error) {
-        console.error("执行出错", error);
-        await closeChat(page);
+        let chatUrl = `https://i.csdn.net/#/msg/chat/${element.id}`;
+        let formData = {
+            ...element,
+            blogger_platform: "CSDN",
+            blogger_name: element.name
+        };
+        const chatPage = await openNewPage(chatUrl);
+        let iframe = await chatPage.$('div.im-wrapper iframe');
+        if (!iframe) {
+            await chatPage.waitForTimeout(30000);
+            iframe = await chatPage.$('div.im-wrapper iframe'); // 重新尝试获取 iframe  
+        }
+        if (!iframe) {
+            console.error("Failed to find iframe for element:", element);
+            return;
+        }
+        const frame = await iframe.contentFrame();
+        await SendContent(frame, formData, "你好");
+        await chatPage.close();
     }
 }
 // 发送内容
 async function SendContent(page, params, huashu) {
-    console.log("SendContent", params, huashu);
-    answer = await fetchStream(params, huashu);
-    chatContent.push(`me:${answer}`);
-    console.log("answer", answer);
-
+     const answer = await fetchStream(params, huashu);
+    console.log("answer",answer);
+    chatContent.push(`ME:${answer}`);
     await page.fill('textarea#messageText', answer);
     await page.waitForTimeout(500);
     let sendBtn = await page.$('div.send button');
     await sendBtn.click();
+    let blessingPhrases = ["祝您生活愉快", "祝您一切顺利", "祝您工作顺利"];
+    let tempFlag = blessingPhrases.some(phrase => answer.includes(phrase))
+    if (tempFlag) {
+        console.log(`结束 -- ${params.blogger_name} -- 对话,准备进入下一个:`);
+        params.df_state = false;
+        params.chatContent = chatContent;
+        codepenData.push(params);
+        fs.writeFileSync("node_auto_mjs/CSDN/codepenData.json", JSON.stringify(codepenData));
+        await page.waitForTimeout(500);
+        return false;
+    }
     let lastItem;
     while (true) {
-        await page.waitForTimeout(15000);
-        tempArrAll = await page.evaluate(() => {
-            let isMyContent = document.querySelectorAll("div.msg-item.msg-item-right div.text-box div.msg");
-            let isMyContents = Array.from(isMyContent).map(e => e.innerText);
-            let notMyConttent = document.querySelectorAll("div.msg-item:not(.msg-item-right) div.text-box div.msg");
-            let notMyConttents = Array.from(notMyConttent).map(e => e.innerText);
-            let msgContents = document.querySelectorAll("div.msg-item div.text-box div.msg");
-            let tempArr = Array.from(msgContents).map(e => e.innerText);
-            let tempContent = document.querySelectorAll('div.chatMsg div.msg-item.msg-item-right:last-child+div.msg-item:not(.msg-item-right)');
+        await page.waitForTimeout(18000);
+        let cTempArr = tempArrAll[params.id];
+        cTempArr = await page.evaluate(() => {
+            let tempArr = [];
+            const chatContainer = document.querySelector('div.chatMsg');
+            const allRightItems = chatContainer.querySelectorAll('div.msg-item.msg-item-right');
+
+            if (allRightItems.length > 0) {
+                const lastRightItem = allRightItems[allRightItems.length - 1];
+                const allItems = chatContainer.querySelectorAll('.msg-item');
+                const lastItemIndex = Array.from(allItems).indexOf(lastRightItem);
+
+                // 找到最后一个右侧消息项之后的所有消息项
+                const subsequentItems = Array.from(allItems).slice(lastItemIndex + 1);
+
+                // 过滤出左侧消息项并添加高亮
+                const leftItemsToHighlight = subsequentItems.filter(
+                    item => !item.classList.contains('msg-item-right')
+                );
+
+                leftItemsToHighlight.forEach(item => {
+                    item.classList.add('highlight-left');
+                });
+                const tempContainer = chatContainer.querySelectorAll('div.highlight-left div.text-box div.msg');
+                tempArr = Array.from(tempContainer).map(e => e.innerText);
+                leftItemsToHighlight.forEach(item => {
+                    item.classList.remove('highlight-left');
+                });
+            }
             return tempArr;
         });
-        if (tempArrAll.length > tempArrAllOld.length) {
-            let tempArr = [];
-            tempArr = getNewElementsWithSet(tempArrAll, tempArrAllOld);
-            lastItem = tempArr.join("\n");
-            chatContent.push(`autor:${lastItem}`);
-            tempArrAllOld = tempArrAll;
+        if (cTempArr.length >= 1) {
+            lastItem = cTempArr.join("\n");
             break;
         }
     }
     console.log("lastItem", lastItem);
+    chatContent.push(`${params.blogger_name}:${lastItem}`);
     await page.waitForTimeout(1000);
     await SendContent(page, params, lastItem);
 }
@@ -121,7 +144,7 @@ async function fetchStream(params, huashu) {
         const token = 'app-8K0uvWNPixWO6sKRA7oaGdCP';
         const body = {
             model_config: {
-                "pre_prompt": "```xml\n<prompt_template>\n  <instruction>\n  你是一个ScriptEcho公司的运营人员，需要与平台{{blogger_platform}}的一位博主{{blogger_name}}洽谈合作，推广我们的平台ScriptEcho。请根据以下信息与博主进行对话，了解其合作意愿、合作方式和价格。你的目标是达成合作，并获取博主的联系方式。要主动跟博主沟通。请注意，输出内容中不能包含任何XML标签。\n\n  步骤一：首先进行自我介绍，并简要介绍ScriptEcho。要循序渐进的来，先询问是否有合作意愿。\n\n  步骤二：询问博主是否有合作意愿，以及其以往的合作方式和价格。要循序渐进的来，如果博主有合作意愿，在询问其合作方式和价格。\n\n  步骤三：根据博主的回应，介绍ScriptEcho的功能，并重点突出对博主可能的好处（例如提高内容创作效率，提升用户体验等）（有关功能部分要严格按照以下信息来，不能随意扩散）。你可以参考以下信息：\n\n  ScriptEcho是一款基于大模型AI技术的前端代码生成工具，旨在通过自动化手段提升前端开发效率。\n\n  ScriptEcho生成前端代码及页面的主要使用方法：\n  上传设计图生成；手绘草图生成；文字描述生成；主题式生成功能（支持组件选择与定制，利用AI 模型根据设计需求从组件库中精选组件，并进行定制化修改与组装。支持主题生成的框架涵盖 Ant Design、Vant、Vuetify 、Element Plus、uniapp等业界主流框架，系统依据预设的视觉风格自动生成相应的代码）；生成结果的手动批注--模型微调（平台会保留多个版本代码供选用）。\n\n  除了基础的使用方法，ScriptEcho还提供：\n  海量Echos查找、引用；支持自定义GPTs；支持项目导出。\n\n  对用户的好处：提高开发效率；减少重复性工作；增强团队协作；优化用户体验。\n\n  步骤四：根据博主的需求，提出具体的合作方案，包括合作方式（ScriptEcho支持：软文推广、视频评测的方式）、合作价格和具体的合作内容。先不要介绍我们想要的合作方式，先询问博主的合作方式和价格。如果博主告知了合作方式和价格，进一步沟通询问博主的联系方式：微信号、手机号等。\n\n  步骤五：总结对话，确认合作意愿，并获取博主的联系方式（例如邮箱、微信等）。\n\n\n  请确保你的回复自然流畅，并体现专业的沟通技巧。聊天要自然，不要程序化。\n\n\n  </instruction>\n  <input>\n    <variable name=\"blogger_name\">\n      <description>博主的姓名或昵称</description>\n      <example>技术小哥</example>\n    </variable>\n    <variable name=\"blogger_platform\">\n",
+                "pre_prompt": '```xml<prompt_template>  <instruction>化一些，根据博主的问题回答相应的问题。  步骤一：首先发起对话,进行自我介绍，并简要介绍ScriptEcho。要循序渐进的来，先询问是否有合作意愿。其合作方式和价格。用户体验等）（有关功能部分要严格按照以下信息来，不能随意扩散）。你可以参考以下信息：https://scriptecho.cn/index.html  ScriptEcho生成前端代码及页面的主要使用方法：--模型微调（平台会保留多个版本代码供选用）。  除了基础的使用方法，ScriptEcho还提供：  海量Echos查找、引用；支持自定义GPTs；支持项目导出。  对用户的好处：提高开发效率；减少重复性工作；增强团队协作；优化用户体验。定价：19.9尝鲜版、39.9标准版、79.9专业版、119旗舰版式：微信号、手机号等。随时谨记聊天回复字数一定要控制在500字以内。告诉博主我们的客服微信号：smmkkk-  请确保你的回复自然流畅，并体现专业的沟通技巧。聊天要自然，不要程序化。</instruction><input><variable name="blogger_name"><description>博主的姓名或昵称</description><example>技术小哥</example></variable><variable name="blogger_platform">```',
                 "prompt_type": "simple",
                 "chat_prompt_config": {},
                 "completion_prompt_config": {},
