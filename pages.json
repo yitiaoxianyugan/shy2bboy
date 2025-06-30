@@ -22,25 +22,6 @@
 			}
 		},
 		{
-			"path" : "componentes/headerInfo_card"
-		},
-		{
-			"path" : "componentes/avatar/index"
-		},
-		{
-			"path" : "componentes/remind/index"
-		},
-		{
-			"path" : "componentes/tabbar/index"
-		},
-		{
-			"path" : "componentes/custom_calendar/index",
-			"style" : 
-			{
-				"navigationBarTitleText" : ""
-			}
-		},
-		{
 			"path" : "pages/article/index",
 			"style" : 
 			{
@@ -48,12 +29,26 @@
 			}
 		},
 		{
-			"path" : "componentes/custom_calendar/lunarCard",
+			"path" : "pages/commentPage/index",
 			"style" : 
 			{
-				"navigationBarTitleText" : ""
+				"navigationBarTitleText" : "评论区 示例"
 			}
-		}
+		},
+		{
+			"path" : "pages/WebSocket/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "WebSocket 测试聊天"
+			}
+		},
+		{
+			"path" : "pages/componenteList/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "组件列表"
+			}
+		},
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

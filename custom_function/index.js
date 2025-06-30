@@ -1,6 +1,7 @@
 import moment from "moment";
 
-import UserData from "../dataJson/user.json"
+import UserData from "../dataJson/user.json";
+import CommentData from "../dataJson/comment.json";
 const userList = UserData.table_list;
 let dots = ".";
 // 格式化时间
@@ -59,7 +60,6 @@ export function showToast(title, type, duration) {
 		duration: duration || 2000
 	});
 }
-
 // 加载状态
 export function loadState(state, loadTextBase, dotNum) {
 	let loadText = "";
@@ -93,3 +93,13 @@ export function countPriceDiscount(price, discount) {
 	}
 	return result
 }
+export function searchComment() {
+	let list = CommentData.table_list;
+	return list;
+}
+
+
+
+
+
+

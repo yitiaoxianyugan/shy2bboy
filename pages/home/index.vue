@@ -1,7 +1,7 @@
 <template>
 	<view class="page">
 		<view class="page-bg home_page">
-			<headerInfo></headerInfo>
+			<headerInfo :value="messageNum" @messageClick="onMessageClick"></headerInfo>
 			<!-- <uni-calendar class="uni-calendar--hook" :lunar="true" :selected="info.selected" :showMonth="true" @change="change" @monthSwitch="monthSwitch" /> -->
 			<customCalendar @selectChangeDate="selectChangeDate"></customCalendar>
 			<view class="bottom_calendar_info flex-col">
@@ -28,6 +28,7 @@
 		},
 		data() {
 			return {
+				messageNum:0,
 				info: {
 					lunar: true,
 					range: true,
@@ -39,6 +40,11 @@
 		},
 		mounted() {},
 		methods: {
+			onMessageClick(){
+				uni.navigateTo({
+					 url: '/pages/componenteList/index',
+				});
+			},
 			change() {
 
 			},

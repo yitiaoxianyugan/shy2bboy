@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebSocket 测试聊天</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.prod.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#0CB4CE',
+            success: '#00B42A',
+            warning: '#FF7D00',
+            danger: '#F53F3F',
+            dark: '#1D2129',
+            light: '#F2F3F5'
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .scrollbar-hide {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .message-bubble {
+        @apply rounded-lg p-3 max-w-[80%] break-words transition-all duration-300;
+      }
+      .message-bubble-sent {
+        @apply bg-primary text-white self-end;
+      }
+      .message-bubble-received {
+        @apply bg-light text-dark self-start;
+      }
+      .typing-indicator {
+        @apply flex space-x-1 animate-pulse;
+      }
+      .typing-dot {
+        @apply w-2 h-2 rounded-full bg-gray-400;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 font-inter min-h-screen flex flex-col">
+  <div id="app" class="flex flex-col h-screen max-w-4xl mx-auto w-full bg-white shadow-lg">
+    <!-- 头部 -->
+    <header class="bg-primary text-white p-4 shadow-md flex justify-between items-center">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-comments-o text-xl"></i>
+        <h1 class="text-xl font-bold">WebSocket 测试聊天</h1>
+      </div>
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center" :class="{'text-success': isConnected, 'text-danger': !isConnected}">
+          <i class="fa fa-circle text-xs mr-1"></i>
+          <span>{{ connectionStatus }}</span>
+        </div>
+        <button 
+          @click="toggleConnection" 
+          class="bg-white text-primary px-3 py-1 rounded text-sm font-medium transition-all duration-300"
+          :class="{'bg-success text-white': !isConnected, 'bg-white text-primary': isConnected}"
+        >
+          {{ isConnected ? '断开' : '连接' }}
+        </button>
+      </div>
+    </header>
+
+    <!-- 聊天区域 -->
+    <main class="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-hide bg-gray-50" ref="messageContainer">
+      <!-- 消息历史 -->
+      <div v-if="messages.length === 0" class="text-center text-gray-400 py-8">
+        <i class="fa fa-comments-o text-4xl mb-2"></i>
+        <p>暂无消息，连接服务器后开始聊天</p>
+      </div>
+      
+      <div 
+        v-for="(message, index) in messages" 
+        :key="index" 
+        class="flex flex-col mb-2"
+      >
+        <div class="flex items-center mb-1 text-xs text-gray-500">
+          <span>{{ message.time }}</span>
+          <span v-if="message.type === 'sent'" class="ml-auto bg-primary/10 text-primary px-2 py-0.5 rounded text-xs">
+            发送
+          </span>
+          <span v-if="message.type === 'received'" class="ml-2 bg-secondary/10 text-secondary px-2 py-0.5 rounded text-xs">
+            接收
+          </span>
+        </div>
+        <div class="message-bubble" :class="{'message-bubble-sent': message.type === 'sent', 'message-bubble-received': message.type === 'received'}">
+          <pre class="whitespace-pre-wrap">{{ message.content }}</pre>
+        </div>
+      </div>
+      
+      <!-- 正在输入提示 -->
+      <div v-if="isTyping" class="typing-indicator">
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+        <span class="typing-dot"></span>
+      </div>
+    </main>
+
+    <!-- 底部输入区域 -->
+    <footer class="p-4 border-t border-gray-200 bg-white">
+      <div class="flex flex-col space-y-3">
+        <div class="flex space-x-2">
+          <input 
+            type="text" 
+            v-model="serverUrl" 
+            placeholder="WebSocket 服务器地址 (例如: ws://echo.websocket.org)"
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300"
+          >
+          <button 
+            @click="connect" 
+            class="bg-primary text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            :disabled="isConnecting || isConnected"
+          >
+            连接
+          </button>
+        </div>
+        
+        <div class="flex space-x-2">
+          <textarea 
+            v-model="message" 
+            placeholder="输入消息..." 
+            rows="2" 
+            class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-300 resize-none"
+          ></textarea>
+          <button 
+            @click="sendMessage" 
+            class="bg-primary text-white px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="!isConnected || !message.trim()"
+          >
+            发送
+          </button>
+        </div>
+        
+        <div class="flex justify-between text-xs text-gray-500">
+          <div>
+            <span class="text-primary">提示:</span> 支持 JSON 格式消息，会自动格式化显示
+          </div>
+          <div>
+            消息大小: {{ message.length }} 字符
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const { createApp, ref, onMounted, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const serverUrl = ref('ws://echo.websocket.org');
+        const message = ref('');
+        const messages = ref([]);
+        const isConnected = ref(false);
+        const isConnecting = ref(false);
+        const connectionStatus = ref('已断开');
+        const isTyping = ref(false);
+        const messageContainer = ref(null);
+        let socket = null;
+        let typingTimer = null;
+
+        // 连接到 WebSocket 服务器
+        const connect = () => {
+          if (isConnected.value || isConnecting.value) return;
+          
+          isConnecting.value = true;
+          connectionStatus.value = '连接中...';
+          
+          try {
+            socket = new WebSocket(serverUrl.value);
+            
+            socket.onopen = () => {
+              isConnected.value = true;
+              isConnecting.value = false;
+              connectionStatus.value = '已连接';
+              addMessage('已成功连接到服务器', 'system');
+              
+              // 发送心跳包保持连接
+              setInterval(() => {
+                if (socket && socket.readyState === WebSocket.OPEN) {
+                  socket.send(JSON.stringify({ type: 'heartbeat' }));
+                }
+              }, 30000);
+            };
+            
+            socket.onmessage = (event) => {
+              addMessage(event.data, 'received');
+              showTypingIndicator(false);
+            };
+            
+            socket.onclose = (event) => {
+              isConnected.value = false;
+              connectionStatus.value = '已断开';
+              addMessage(`连接已关闭 (代码: ${event.code}, 原因: ${event.reason})`, 'system');
+            };
+            
+            socket.onerror = (error) => {
+              isConnected.value = false;
+              isConnecting.value = false;
+              connectionStatus.value = '连接错误';
+              addMessage(`连接错误: ${error.message}`, 'error');
+            };
+          } catch (error) {
+            isConnecting.value = false;
+            connectionStatus.value = '连接失败';
+            addMessage(`连接失败: ${error.message}`, 'error');
+          }
+        };
+
+        // 断开连接
+        const disconnect = () => {
+          if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+            socket.close(1000, '用户主动断开连接');
+            addMessage('已主动断开与服务器的连接', 'system');
+          }
+        };
+
+        // 切换连接状态
+        const toggleConnection = () => {
+          if (isConnected.value) {
+            disconnect();
+          } else {
+            connect();
+          }
+        };
+
+        // 发送消息
+        const sendMessage = () => {
+          if (!isConnected.value || !message.value.trim()) return;
+          
+          try {
+            // 尝试解析为 JSON
+            let parsedMessage = message.value.trim();
+            try {
+              parsedMessage = JSON.parse(message.value.trim());
+            } catch (e) {
+              // 不是有效的 JSON，按原样发送
+            }
+            
+            socket.send(typeof parsedMessage === 'object' ? JSON.stringify(parsedMessage) : parsedMessage);
+            addMessage(message.value.trim(), 'sent');
+            message.value = '';
+            showTypingIndicator(true);
+          } catch (error) {
+            addMessage(`发送消息失败: ${error.message}`, 'error');
+          }
+        };
+
+        // 添加消息到历史记录
+        const addMessage = (content, type) => {
+          const time = new Date().toLocaleTimeString();
+          
+          // 尝试格式化 JSON
+          let formattedContent = content;
+          try {
+            if (typeof content === 'string') {
+              const jsonObj = JSON.parse(content);
+              formattedContent = JSON.stringify(jsonObj, null, 2);
+            }
+          } catch (e) {
+            // 不是有效的 JSON，保持原样
+          }
+          
+          messages.value.push({
+            content: formattedContent,
+            type: type === 'sent' ? 'sent' : type === 'received' ? 'received' : 'system',
+            time
+          });
+          
+          // 滚动到底部
+          scrollToBottom();
+        };
+
+        // 显示/隐藏正在输入提示
+        const showTypingIndicator = (show) => {
+          if (typingTimer) clearTimeout(typingTimer);
+          
+          isTyping.value = show;
+          
+          if (show) {
+            typingTimer = setTimeout(() => {
+              isTyping.value = false;
+            }, 2000);
+          }
+        };
+
+        // 滚动到消息容器底部
+        const scrollToBottom = () => {
+          nextTick(() => {
+            if (messageContainer.value) {
+              messageContainer.value.scrollTop = messageContainer.value.scrollHeight;
+            }
+          });
+        };
+
+        // 键盘事件处理
+        const handleKeyDown = (event) => {
+          if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendMessage();
+          }
+        };
+
+        // 组件挂载后初始化
+        onMounted(() => {
+          // 监听窗口关闭事件，确保 WebSocket 连接关闭
+          window.addEventListener('beforeunload', () => {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+              socket.close(1000, '页面关闭');
+            }
+          });
+        });
+
+        return {
+          serverUrl,
+          message,
+          messages,
+          isConnected,
+          isConnecting,
+          connectionStatus,
+          isTyping,
+          messageContainer,
+          connect,
+          disconnect,
+          toggleConnection,
+          sendMessage,
+          handleKeyDown
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
+    

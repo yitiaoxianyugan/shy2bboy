@@ -27,6 +27,7 @@ export default {
   overflow: hidden;
   padding-top:var(--status-bar-height);
 }
+uni-page-body{height: 100%;}
 .page-bg {
   width: 100%;
   height: 100%;

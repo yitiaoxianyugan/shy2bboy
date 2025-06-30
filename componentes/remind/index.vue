@@ -1,6 +1,6 @@
 <template>
 	<view class="remind_container">
-		<uni-badge class="remind_badge" :text="value" absolute="rightTop" size="small">
+		<uni-badge class="remind_badge" :text="cValue" absolute="rightTop" size="small">
 			<view class="box">
 				<svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
 					<path d="M24 4C16.268 4 10 10.268 10 18V38H38V18C38 10.268 31.732 4 24 4Z" fill="none" />
@@ -17,9 +17,23 @@
 
 <script>
 	export default {
+		props:{
+			value:{type:[String,Number]}
+		},
+		computed:{
+			cValue(){
+				let str = this.value;
+				if(parseInt(str) <=0 || !str){
+					str = ""
+				}else{
+					str = str.toString()
+				}
+				return str;
+			}
+		},
 		data() {
 			return {
-			value:"12"
+				
 			}
 		},
 		methods: {

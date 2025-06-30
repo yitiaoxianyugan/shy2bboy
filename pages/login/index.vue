@@ -27,7 +27,7 @@
 	import {
 		login,
 		showToast
-	} from "../../custom_function/index.js"
+	} from "../../custom_function/index.js";
 	export default {
 		data() {
 			return {
@@ -72,6 +72,9 @@
 
 <style lang="less">
 	.login-page {
+		width:100vw;
+		height: 100vh;
+		overflow: hidden;
 		background-image: url("../../static/login_background.gif");
 		background-size: 100% 100%;
 		position: relative;

@@ -1,0 +1,108 @@
+<template>
+	<view class="comment-view gap-1 flex-row">
+		<view class="user_avatar flex-0-0">
+			<img class="avatar-image" src="/static/avatar.jpg" />
+		</view>
+		<view class="user_comment flex-col flex-1-1">
+			<view class="main_content flex-row justify-between">
+				<view class="content flex-col gap-1">
+					<view class="user_name_view flex-row gap-2 items-center flex-nowrap">
+						<text class="user_name">{{item.user_name}} </text>
+						<text v-if="userType == 'autor'" class="user_autor h-100 flex-row flex-center">作者</text>
+						<text v-else-if="userType == 'mine'" class="user_mine">我</text>
+					</view>
+					<!-- 需要支持图片、表情 -->
+					<view class="user_comment_view flex-row flex-wrap">
+						<text>{{item.comment}}</text>
+						<view class="other-info flex-row flex-wrap gap-1">
+							<text>3天前</text>
+							<text>{{item.ip_ads}}</text>
+							<text class="apply" @click="onApply(item)">回复</text>
+						</view>
+					</view>
+				</view>
+				<view class="like-status flex-col items-center flex-0-0" @click="changeLikeStatus(item)">
+					<view>
+						<uni-icons v-if="item.likeStatus" type="heart-filled" size="24" color="#ff6e00"></uni-icons>
+						<uni-icons v-else type="heart" size="24" color="#999"></uni-icons>
+					</view>
+					<view>{{item.likeNum}}</view>
+				</view>
+			</view>
+		</view>
+	</view>
+</template>
+
+<script>
+	import commentJs from "../../mixin/comment.js"
+	export default {
+		mixins:[commentJs],
+		data() {
+			return {
+			}
+		},
+		
+	}
+</script>
+
+<style lang="less">
+	.comment-view {
+		.user_avatar {
+			width: 2rem;
+
+			.avatar-image {
+				width: 100%;
+				aspect-ratio: 1 / 1;
+				border-radius: 50%;
+			}
+		}
+
+		.user_comment {
+			.main_content {
+				.content {
+					.user_name_view {
+						font-size: .875rem;
+
+						.user_name {
+							font-size: 1rem;
+							color: #999;
+						}
+
+						.user_autor {
+							color: #ff6e00;
+							background-color: #ececec;
+							border-radius: 50px;
+							line-height: 1;
+							padding: 0rem .5rem;
+						}
+
+						.user_mine {
+							color: #999;
+						}
+					}
+
+					.user_comment_view {
+						column-gap: .5rem;
+						row-gap: .25rem;
+
+						.other-info {
+							color: #999;
+							font-size: .75rem;
+							align-items: flex-end;
+
+							.apply {
+								color: #1890ff;
+							}
+						}
+					}
+				}
+
+				.like-status {
+					width: 2.5rem;
+					font-size: .875rem;
+					color: #999;
+				}
+			}
+		}
+	}
+</style>
