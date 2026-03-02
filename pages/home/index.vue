@@ -42,7 +42,7 @@
 		methods: {
 			onMessageClick(){
 				uni.navigateTo({
-					 url: '/pages/componenteList/index',
+					 url: '/pages/pagesList/index',
 				});
 			},
 			change() {

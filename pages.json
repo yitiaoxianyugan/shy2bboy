@@ -1,7 +1,11 @@
 {
 	"pages": [
 		{
-			"path": "pages/index/index"
+			"path": "pages/index/index",
+			"style": {
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "加载页"
+			}
 		},
 		{
 			"path": "pages/login/index",
@@ -12,13 +16,28 @@
 		{
 			"path": "pages/home/index",
 			"style": {
-				"navigationStyle": "custom"
+				"navigationStyle": "custom",
+				"navigationBarTitleText": "首页"
 			}
 		},
 		{
 			"path": "pages/mine/index",
 			"style": {
 				"navigationBarTitleText": "我的"
+			}
+		},
+		{
+			"path" : "pages/componenteList/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "组件列表"
+			}
+		},
+		{
+			"path" : "pages/pagesList/index",
+			"style" : 
+			{
+				"navigationBarTitleText" : "页面列表"
 			}
 		},
 		{
@@ -32,7 +51,7 @@
 			"path" : "pages/commentPage/index",
 			"style" : 
 			{
-				"navigationBarTitleText" : "评论区 示例"
+				"navigationBarTitleText" : "评论区"
 			}
 		},
 		{
@@ -43,12 +62,12 @@
 			}
 		},
 		{
-			"path" : "pages/componenteList/index",
+			"path" : "pages/redBlueBall/index",
 			"style" : 
 			{
-				"navigationBarTitleText" : "组件列表"
+				"navigationBarTitleText" : "双色球"
 			}
-		},
+		}
 	],
 	"globalStyle": {
 		"navigationBarTextStyle": "black",

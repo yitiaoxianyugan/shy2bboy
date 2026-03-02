@@ -1,0 +1,36 @@
+
+接口地址：http://api.huiniao.top/interface/home/lotteryHistory
+返回格式：json
+请求方式：get
+请求示例：http://api.huiniao.top/interface/home/lotteryHistory?type=pls&page=1&limit=10
+
+请求参数说明:
+type	string(必填) 彩票类型:pls（排列三），plw （排列五），dlt（大乐透），qxc（七星彩），fcsd（福彩3D），
+							qlc（七乐彩），ssq（双色球），klb（快乐8），hdswxw（华东15选5），dfljy（东方6+1），
+							fj22x5（福建22选5），fj31x7（福建31选7），fj31x7fj（福建31选7附加），fj36x7（福建36选7）
+							，gd36x7（广东36选7），gdhcy（广东好彩1），gxklsc（广西快乐双彩），hb20x5（河北20选5），
+							hbhyc2（河北好运彩2），hbhyc3（河北好运彩3），hbplw（河北排列5），hbplq（河北排列7），
+							hlj22x5（黑龙江22选5），hljp62（黑龙江P62），hlj36x7（黑龙江36选7），hljljy（黑龙江6+1），
+							hen22x5（河南22选5），hainsjy（海南4+1） ，jsqws（江苏7位数），shttcx4（上海天天彩选4），
+							zj20x5（浙江20选5），zjtcljy（浙江6+1）
+page	int 页码数
+limit	int 每页数量
+code	int 彩票期号
+
+返回参数说明：
+code	int	状态码
+info	string	返回说明
+data	object	返回数据
+data.last	object	最新一期开奖结果
+data.data	object	查询结果
+data.data.list	object	查询结果列表
+data.data.totalCount	int	总数量
+data.data.currentPage	int	当前页码
+data.data.currentLimit	int	当前每页数量
+data.data.totalPage	int	总页码
+
+服务级错误码参照
+401	请求频繁
+0	缺少参数或参数错误
+
+随机选号
